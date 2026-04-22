@@ -1,0 +1,238 @@
+const mongoose = require("mongoose");
+const { Application, ApplicationStatuses } = require("../models/Application");
+const { Company } = require("../models/Company");
+const { Task } = require("../models/Task");
+
+function asDate(value) {
+  const d = new Date(value);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
+async function listApplications(req, res) {
+  const { status, companyId, q } = req.validated.query;
+
+  const filter = { userId: req.user.userId };
+  if (status) filter.status = status;
+  if (companyId && mongoose.isValidObjectId(companyId)) filter.companyId = companyId;
+
+  if (q) {
+    const regex = new RegExp(String(q).trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
+    filter.$or = [{ role: regex }, { notes: regex }];
+  }
+
+  const apps = await Application.find(filter)
+    .sort({ appliedDate: -1, updatedAt: -1 })
+    .populate("companyId", "name website")
+    .lean();
+
+  res.json({ data: apps });
+}
+
+async function createApplication(req, res) {
+  const body = req.validated.body;
+
+  let companyId = body.companyId;
+  if (!companyId && body.companyName) {
+    const name = body.companyName.trim();
+    const existing = await Company.findOne({ userId: req.user.userId, name });
+    const company = existing
+      ? existing
+      : await Company.create({ userId: req.user.userId, name, website: "", hqLocation: "", notes: "" });
+    companyId = company._id;
+  }
+
+  if (!companyId || !mongoose.isValidObjectId(companyId)) {
+    return res.status(400).json({ error: { message: "companyId or companyName required" } });
+  }
+
+  const appliedDate = asDate(body.appliedDate);
+  if (!appliedDate) return res.status(400).json({ error: { message: "Invalid appliedDate" } });
+
+  if (!ApplicationStatuses.includes(body.status)) {
+    return res.status(400).json({ error: { message: "Invalid status" } });
+  }
+
+  // Ensure company belongs to the user
+  const company = await Company.findOne({ _id: companyId, userId: req.user.userId }).lean();
+  if (!company) return res.status(400).json({ error: { message: "Company not found" } });
+
+  const app = await Application.create({
+    userId: req.user.userId,
+    companyId,
+    role: body.role.trim(),
+    status: body.status,
+    appliedDate,
+    jobLink: body.jobLink || "",
+    location: body.location || "",
+    salaryRange: body.salaryRange || "",
+    source: body.source || "",
+    notes: body.notes || "",
+  });
+
+  const populated = await Application.findById(app._id).populate("companyId", "name website").lean();
+  res.status(201).json({ data: populated });
+}
+
+async function getApplication(req, res) {
+  const { id } = req.validated.params;
+  if (!mongoose.isValidObjectId(id)) return res.status(400).json({ error: { message: "Invalid id" } });
+
+  const app = await Application.findOne({ _id: id, userId: req.user.userId })
+    .populate("companyId", "name website")
+    .lean();
+  if (!app) return res.status(404).json({ error: { message: "Application not found" } });
+  res.json({ data: app });
+}
+
+async function updateApplication(req, res) {
+  const { id } = req.validated.params;
+  if (!mongoose.isValidObjectId(id)) return res.status(400).json({ error: { message: "Invalid id" } });
+
+  const updates = { ...req.validated.body };
+
+  if (updates.appliedDate) {
+    const d = asDate(updates.appliedDate);
+    if (!d) return res.status(400).json({ error: { message: "Invalid appliedDate" } });
+    updates.appliedDate = d;
+  }
+
+  if (updates.status && !ApplicationStatuses.includes(updates.status)) {
+    return res.status(400).json({ error: { message: "Invalid status" } });
+  }
+
+  if (updates.companyId) {
+    if (!mongoose.isValidObjectId(updates.companyId)) {
+      return res.status(400).json({ error: { message: "Invalid companyId" } });
+    }
+    const company = await Company.findOne({ _id: updates.companyId, userId: req.user.userId }).lean();
+    if (!company) return res.status(400).json({ error: { message: "Company not found" } });
+  }
+
+  const app = await Application.findOneAndUpdate(
+    { _id: id, userId: req.user.userId },
+    { $set: updates },
+    { new: true },
+  )
+    .populate("companyId", "name website")
+    .lean();
+
+  if (!app) return res.status(404).json({ error: { message: "Application not found" } });
+  res.json({ data: app });
+}
+
+async function setStatus(req, res) {
+  const { id } = req.validated.params;
+  const { status } = req.validated.body;
+  if (!mongoose.isValidObjectId(id)) return res.status(400).json({ error: { message: "Invalid id" } });
+  if (!ApplicationStatuses.includes(status)) return res.status(400).json({ error: { message: "Invalid status" } });
+
+  const app = await Application.findOneAndUpdate(
+    { _id: id, userId: req.user.userId },
+    { $set: { status } },
+    { new: true },
+  )
+    .populate("companyId", "name website")
+    .lean();
+
+  if (!app) return res.status(404).json({ error: { message: "Application not found" } });
+  res.json({ data: app });
+}
+
+async function deleteApplication(req, res) {
+  const { id } = req.validated.params;
+  if (!mongoose.isValidObjectId(id)) return res.status(400).json({ error: { message: "Invalid id" } });
+
+  const deleted = await Application.findOneAndDelete({ _id: id, userId: req.user.userId });
+  if (!deleted) return res.status(404).json({ error: { message: "Application not found" } });
+
+  await Task.deleteMany({ userId: req.user.userId, applicationId: id });
+
+  res.json({ data: { ok: true } });
+}
+
+async function addRound(req, res) {
+  const { id } = req.validated.params;
+  if (!mongoose.isValidObjectId(id)) return res.status(400).json({ error: { message: "Invalid id" } });
+
+  const { roundType, scheduledAt, status, notes } = req.validated.body;
+  const scheduled = scheduledAt ? asDate(scheduledAt) : null;
+  if (scheduledAt && !scheduled) return res.status(400).json({ error: { message: "Invalid scheduledAt" } });
+
+  const app = await Application.findOneAndUpdate(
+    { _id: id, userId: req.user.userId },
+    {
+      $push: {
+        interviewRounds: {
+          roundType,
+          scheduledAt: scheduled || undefined,
+          status: status || "Scheduled",
+          notes: notes || "",
+        },
+      },
+    },
+    { new: true },
+  )
+    .populate("companyId", "name website")
+    .lean();
+
+  if (!app) return res.status(404).json({ error: { message: "Application not found" } });
+  res.json({ data: app });
+}
+
+async function updateRound(req, res) {
+  const { id, roundId } = req.validated.params;
+  if (!mongoose.isValidObjectId(id) || !mongoose.isValidObjectId(roundId)) {
+    return res.status(400).json({ error: { message: "Invalid id" } });
+  }
+
+  const updates = { ...req.validated.body };
+  if (updates.scheduledAt) {
+    const d = asDate(updates.scheduledAt);
+    if (!d) return res.status(400).json({ error: { message: "Invalid scheduledAt" } });
+    updates.scheduledAt = d;
+  }
+
+  const set = {};
+  for (const [k, v] of Object.entries(updates)) set[`interviewRounds.$.${k}`] = v;
+
+  const app = await Application.findOneAndUpdate(
+    { _id: id, userId: req.user.userId, "interviewRounds._id": roundId },
+    { $set: set },
+    { new: true },
+  )
+    .populate("companyId", "name website")
+    .lean();
+
+  if (!app) return res.status(404).json({ error: { message: "Round not found" } });
+  res.json({ data: app });
+}
+
+async function deleteRound(req, res) {
+  const { id, roundId } = req.validated.params;
+  if (!mongoose.isValidObjectId(id) || !mongoose.isValidObjectId(roundId)) {
+    return res.status(400).json({ error: { message: "Invalid id" } });
+  }
+
+  const app = await Application.findOneAndUpdate(
+    { _id: id, userId: req.user.userId },
+    { $pull: { interviewRounds: { _id: roundId } } },
+    { new: true },
+  )
+    .populate("companyId", "name website")
+    .lean();
+
+  if (!app) return res.status(404).json({ error: { message: "Application not found" } });
+  res.json({ data: app });
+}
+
+module.exports = {
+  listApplications,
+  createApplication,
+  getApplication,
+  updateApplication,
+  setStatus,
+  deleteApplication,
+  addRound,
+  updateRound,
+  deleteRound,
+};

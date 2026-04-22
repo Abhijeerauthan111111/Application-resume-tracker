@@ -1,0 +1,387 @@
+:root {
+  --bg: #0b1220;
+  --card: #121c2f;
+  --text: #e9eefc;
+  --muted: #98a7c6;
+  --border: rgba(255, 255, 255, 0.08);
+  --primary: #4f8cff;
+  --danger: #ff5a77;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji",
+    "Segoe UI Emoji";
+  background: radial-gradient(1200px 600px at 10% 0%, rgba(79, 140, 255, 0.25), transparent 60%),
+    radial-gradient(1000px 700px at 90% 20%, rgba(129, 255, 184, 0.12), transparent 55%), var(--bg);
+  color: var(--text);
+}
+
+a {
+  color: inherit;
+}
+
+.container {
+  max-width: 1200px;
+  padding: 24px;
+  margin: 0 auto;
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 24px;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  background: rgba(11, 18, 32, 0.85);
+  backdrop-filter: blur(12px);
+}
+
+.nav-left,
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brand {
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  text-decoration: none;
+}
+
+.active {
+  color: var(--primary);
+}
+
+.card {
+  background: rgba(18, 28, 47, 0.9);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 16px;
+  margin: 14px 0;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
+}
+
+.auth-shell {
+  display: grid;
+  grid-template-columns: 1.2fr 0.9fr;
+  gap: 18px;
+  align-items: stretch;
+  min-height: calc(100vh - 48px);
+}
+
+.auth-hero {
+  padding: 22px 8px;
+}
+
+.auth-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.auth-title {
+  margin: 14px 0 6px;
+  font-size: 40px;
+  line-height: 1.05;
+  letter-spacing: -0.8px;
+}
+
+.auth-subtitle {
+  max-width: 52ch;
+  line-height: 1.6;
+}
+
+.auth-points {
+  margin-top: 18px;
+  display: grid;
+  gap: 10px;
+  max-width: 56ch;
+}
+
+.auth-point {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(79, 140, 255, 0.8);
+  box-shadow: 0 0 0 6px rgba(79, 140, 255, 0.12);
+}
+
+.auth-card {
+  align-self: center;
+  margin: 0;
+  padding: 18px;
+}
+
+.auth-card-title {
+  margin: 0 0 6px;
+}
+
+.auth-btn {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 12px 14px;
+  font-weight: 700;
+}
+
+.google-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border);
+}
+
+.auth-footnote {
+  margin-top: 10px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.wrap {
+  flex-wrap: wrap;
+}
+
+.spacer {
+  flex: 1;
+}
+
+.input {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  color: var(--text);
+  outline: none;
+  min-width: 180px;
+}
+
+.input:disabled {
+  opacity: 0.7;
+}
+
+.input:focus {
+  border-color: rgba(79, 140, 255, 0.7);
+}
+
+/* Fix select dropdown readability (Windows/Chrome often shows a light menu with inherited light text). */
+select.input {
+  background: #ffffff;
+  color: #000000;
+}
+
+select.input option {
+  background: #ffffff;
+  color: #000000;
+}
+
+.btn {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 10px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.btn:hover {
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+.btn-primary {
+  background: rgba(79, 140, 255, 0.16);
+  border-color: rgba(79, 140, 255, 0.45);
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.error {
+  color: var(--danger);
+}
+
+.link {
+  color: var(--primary);
+  text-decoration: none;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th,
+.table td {
+  padding: 10px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  border: 1px solid var(--border);
+}
+
+.pill-Applied,
+.pill-Interview,
+.pill-Offer {
+  border-color: rgba(79, 140, 255, 0.5);
+}
+
+.pill-Rejected,
+.pill-Withdrawn {
+  border-color: rgba(255, 90, 119, 0.6);
+}
+
+.pill-Accepted {
+  border-color: rgba(129, 255, 184, 0.5);
+}
+
+.kanban {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(220px, 1fr));
+  gap: 12px;
+  overflow: auto;
+  padding-bottom: 12px;
+}
+
+.kanban-col {
+  min-height: 220px;
+  border: 1px dashed rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  padding: 10px;
+}
+
+.kanban-col-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 4px 10px;
+}
+
+.kanban-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.kanban-card {
+  margin: 0;
+  cursor: grab;
+}
+
+.title {
+  font-weight: 700;
+}
+
+.grid2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+@media (max-width: 980px) {
+  .grid2 {
+    grid-template-columns: 1fr;
+  }
+  .kanban {
+    grid-template-columns: repeat(2, minmax(220px, 1fr));
+  }
+}
+
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+@media (max-width: 860px) {
+  .auth-shell {
+    grid-template-columns: 1fr;
+    min-height: auto;
+  }
+  .auth-hero {
+    padding: 6px 2px 0;
+  }
+  .auth-title {
+    font-size: 32px;
+  }
+  .auth-card {
+    margin-top: 10px;
+  }
+}
+
+.list {
+  list-style: none;
+  padding: 0;
+  margin: 12px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.list-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.divider {
+  height: 1px;
+  background: var(--border);
+  margin: 12px 0;
+}
+
+.pre {
+  white-space: pre-wrap;
+  word-break: break-word;
+  margin-top: 6px;
+}
+
+.small {
+  font-size: 12px;
+}
+
+.kv {
+  min-width: 160px;
+}

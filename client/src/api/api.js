@@ -1,6 +1,7 @@
 import axios from "axios";
 
-const baseURL = import.meta.env.VITE_API_BASE_URL || "http://localhost:4000";
+// In production on Vercel (single domain), prefer same-origin requests by default.
+const baseURL = import.meta.env.VITE_API_BASE_URL || "";
 
 export function createApi(getIdToken) {
   const client = axios.create({

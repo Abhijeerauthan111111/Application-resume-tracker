@@ -33,6 +33,8 @@ const env = {
   REMINDER_JOB_INTERVAL_MS: Number(process.env.REMINDER_JOB_INTERVAL_MS || 60_000),
   DIGEST_JOB_INTERVAL_MS: Number(process.env.DIGEST_JOB_INTERVAL_MS || 300_000),
   DIGEST_LOOKAHEAD_HOURS: Number(process.env.DIGEST_LOOKAHEAD_HOURS || 48),
+  CRON_SECRET: process.env.CRON_SECRET || "",
+  JOBS_SECRET: process.env.JOBS_SECRET || "",
 };
 
 module.exports = { env, requireEnv };

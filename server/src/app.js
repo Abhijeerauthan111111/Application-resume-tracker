@@ -15,6 +15,7 @@ const documentRoutes = require("./routes/documents.routes");
 const shareRoutes = require("./routes/shares.routes");
 const analyticsRoutes = require("./routes/analytics.routes");
 const userRoutes = require("./routes/users.routes");
+const jobsRoutes = require("./routes/jobs.routes");
 
 function createApp() {
   const app = express();
@@ -45,6 +46,7 @@ function createApp() {
   app.use("/api/shares", shareRoutes);
   app.use("/api/analytics", analyticsRoutes);
   app.use("/api/users", userRoutes);
+  app.use("/api/jobs", jobsRoutes);
 
   app.use(errorHandler);
 

@@ -32,7 +32,11 @@ async function createShare(req, res) {
     includeDocuments: body.includeDocuments ?? false,
   });
 
-  const shareUrl = `${env.APP_BASE_URL.replace(/\/$/, "")}/share/${token}`;
+  const configuredBase = (env.APP_BASE_URL || "").trim();
+  const hostBase = req.headers.host ? `https://${req.headers.host}` : "";
+  const base =
+    configuredBase && !configuredBase.includes("localhost") ? configuredBase : hostBase || configuredBase;
+  const shareUrl = `${String(base).replace(/\/$/, "")}/share/${token}`;
 
   res.status(201).json({
     data: {

@@ -113,5 +113,68 @@ export function createApi(getIdToken) {
       const res = await client.delete(`/tasks/${id}`);
       return res.data.data;
     },
+
+    // Phase 2 - Documents
+    async listDocuments(params) {
+      const res = await client.get("/documents", { params });
+      return res.data.data;
+    },
+
+    async createDocument(payload) {
+      const res = await client.post("/documents", payload);
+      return res.data.data;
+    },
+
+    async updateDocument(id, payload) {
+      const res = await client.patch(`/documents/${id}`, payload);
+      return res.data.data;
+    },
+
+    async deleteDocument(id) {
+      const res = await client.delete(`/documents/${id}`);
+      return res.data.data;
+    },
+
+    async uploadDocument(formData) {
+      const res = await client.post("/documents/upload", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      return res.data.data;
+    },
+
+    // Phase 2 - Sharing
+    async createShare(payload) {
+      const res = await client.post("/shares", payload);
+      return res.data.data;
+    },
+
+    async listShares() {
+      const res = await client.get("/shares");
+      return res.data.data;
+    },
+
+    async revokeShare(id) {
+      const res = await client.patch(`/shares/${id}/revoke`);
+      return res.data.data;
+    },
+
+    // Phase 2 - Analytics
+    async analyticsSummary() {
+      const res = await client.get("/analytics/summary");
+      return res.data.data;
+    },
+  };
+}
+
+// Public endpoints (no auth header)
+export function publicApi() {
+  const client = axios.create({
+    baseURL: `${baseURL}/api`,
+  });
+  return {
+    async getPublicShare(token) {
+      const res = await client.get(`/shares/public/${token}`);
+      return res.data.data;
+    },
   };
 }

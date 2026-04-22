@@ -8,6 +8,9 @@ import ApplicationsPage from "./pages/ApplicationsPage";
 import ApplicationDetailPage from "./pages/ApplicationDetailPage";
 import TasksPage from "./pages/TasksPage";
 import CompaniesPage from "./pages/CompaniesPage";
+import DocumentsPage from "./pages/DocumentsPage";
+import SharePage from "./pages/SharePage";
+import SharesPage from "./pages/SharesPage";
 
 function Protected({ children }) {
   const { user, loading } = useAuth();
@@ -24,6 +27,7 @@ export default function App() {
       {user ? <Navbar /> : null}
       <Routes>
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/share/:token" element={<SharePage />} />
         <Route
           path="/applications"
           element={
@@ -53,6 +57,22 @@ export default function App() {
           element={
             <Protected>
               <CompaniesPage />
+            </Protected>
+          }
+        />
+        <Route
+          path="/documents"
+          element={
+            <Protected>
+              <DocumentsPage />
+            </Protected>
+          }
+        />
+        <Route
+          path="/shares"
+          element={
+            <Protected>
+              <SharesPage />
             </Protected>
           }
         />

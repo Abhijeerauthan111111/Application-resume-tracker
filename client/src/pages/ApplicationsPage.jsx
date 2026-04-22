@@ -21,8 +21,13 @@ export default function ApplicationsPage() {
   const [view, setView] = useState("kanban");
   const [applications, setApplications] = useState([]);
   const [companies, setCompanies] = useState([]);
+  const [analytics, setAnalytics] = useState(null);
   const [q, setQ] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [companyFilter, setCompanyFilter] = useState("");
+  const [appliedFrom, setAppliedFrom] = useState("");
+  const [appliedTo, setAppliedTo] = useState("");
+  const [sort, setSort] = useState("appliedDate_desc");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -39,15 +44,21 @@ export default function ApplicationsPage() {
     setLoading(true);
     setError("");
     try {
-      const [apps, comps] = await Promise.all([
+      const [apps, comps, summary] = await Promise.all([
         api.listApplications({
           q: q || undefined,
           status: statusFilter || undefined,
+          companyId: companyFilter || undefined,
+          appliedFrom: appliedFrom || undefined,
+          appliedTo: appliedTo || undefined,
+          sort: sort || undefined,
         }),
         api.listCompanies(),
+        api.analyticsSummary(),
       ]);
       setApplications(apps);
       setCompanies(comps);
+      setAnalytics(summary);
     } catch (e) {
       setError("Failed to load applications.");
     } finally {
@@ -86,11 +97,52 @@ export default function ApplicationsPage() {
               </option>
             ))}
           </select>
+          <select className="input" value={companyFilter} onChange={(e) => setCompanyFilter(e.target.value)}>
+            <option value="">All companies</option>
+            {companies.map((c) => (
+              <option key={c._id} value={c._id}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+          <input className="input" type="date" value={appliedFrom} onChange={(e) => setAppliedFrom(e.target.value)} />
+          <input className="input" type="date" value={appliedTo} onChange={(e) => setAppliedTo(e.target.value)} />
+          <select className="input" value={sort} onChange={(e) => setSort(e.target.value)}>
+            <option value="appliedDate_desc">Applied (newest)</option>
+            <option value="appliedDate_asc">Applied (oldest)</option>
+            <option value="updatedAt_desc">Updated (newest)</option>
+            <option value="updatedAt_asc">Updated (oldest)</option>
+          </select>
           <button className="btn" onClick={refresh}>
             Apply filters
           </button>
         </div>
         {error ? <p className="error">{error}</p> : null}
+        {analytics ? (
+          <div className="row wrap" style={{ marginTop: 10 }}>
+            <span className="muted small">Counts:</span>
+            {Object.entries(analytics.countsByStatus || {}).map(([k, v]) => (
+              <span key={k} className="pill" style={{ marginRight: 6 }}>
+                {k}: {v}
+              </span>
+            ))}
+          </div>
+        ) : null}
+        {analytics?.applicationsLast28Days ? (
+          <div style={{ marginTop: 12 }}>
+            <div className="muted small">Applications (last 28 days)</div>
+            <div className="spark">
+              {analytics.applicationsLast28Days.map((p) => (
+                <div
+                  key={p.date}
+                  className="spark-bar"
+                  title={`${p.date}: ${p.count}`}
+                  style={{ height: `${Math.min(40, 6 + p.count * 6)}px` }}
+                />
+              ))}
+            </div>
+          </div>
+        ) : null}
       </div>
 
       <div className="card">

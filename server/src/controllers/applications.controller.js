@@ -2,26 +2,72 @@ const mongoose = require("mongoose");
 const { Application, ApplicationStatuses } = require("../models/Application");
 const { Company } = require("../models/Company");
 const { Task } = require("../models/Task");
+const { Document } = require("../models/Document");
 
 function asDate(value) {
   const d = new Date(value);
   return Number.isNaN(d.getTime()) ? null : d;
 }
 
+async function ensureDocumentsOwned({ userId, documentIds }) {
+  if (!Array.isArray(documentIds)) return [];
+  const ids = [];
+  for (const id of documentIds) {
+    if (!mongoose.isValidObjectId(id)) {
+      const err = new Error("Invalid documentId");
+      err.status = 400;
+      throw err;
+    }
+    ids.push(id);
+  }
+  const uniqueIds = [...new Set(ids.map(String))];
+  if (uniqueIds.length === 0) return [];
+  const count = await Document.countDocuments({ userId, _id: { $in: uniqueIds } });
+  if (count !== uniqueIds.length) {
+    const err = new Error("One or more documents not found");
+    err.status = 400;
+    throw err;
+  }
+  return uniqueIds;
+}
+
 async function listApplications(req, res) {
-  const { status, companyId, q } = req.validated.query;
+  const { status, companyId, q, appliedFrom, appliedTo, sort } = req.validated.query;
 
   const filter = { userId: req.user.userId };
   if (status) filter.status = status;
   if (companyId && mongoose.isValidObjectId(companyId)) filter.companyId = companyId;
+  if (appliedFrom || appliedTo) {
+    const range = {};
+    if (appliedFrom) {
+      const d = asDate(appliedFrom);
+      if (d) range.$gte = d;
+    }
+    if (appliedTo) {
+      const d = asDate(appliedTo);
+      if (d) {
+        // inclusive end-of-day
+        d.setHours(23, 59, 59, 999);
+        range.$lte = d;
+      }
+    }
+    filter.appliedDate = range;
+  }
 
   if (q) {
     const regex = new RegExp(String(q).trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
     filter.$or = [{ role: regex }, { notes: regex }];
   }
 
+  const sortMap = {
+    appliedDate_desc: { appliedDate: -1, updatedAt: -1 },
+    appliedDate_asc: { appliedDate: 1, updatedAt: -1 },
+    updatedAt_desc: { updatedAt: -1 },
+    updatedAt_asc: { updatedAt: 1 },
+  };
+
   const apps = await Application.find(filter)
-    .sort({ appliedDate: -1, updatedAt: -1 })
+    .sort(sort ? sortMap[sort] : { appliedDate: -1, updatedAt: -1 })
     .populate("companyId", "name website")
     .lean();
 
@@ -67,6 +113,7 @@ async function createApplication(req, res) {
     salaryRange: body.salaryRange || "",
     source: body.source || "",
     notes: body.notes || "",
+    documentIds: body.documentIds ? await ensureDocumentsOwned({ userId: req.user.userId, documentIds: body.documentIds }) : [],
   });
 
   const populated = await Application.findById(app._id).populate("companyId", "name website").lean();
@@ -106,6 +153,10 @@ async function updateApplication(req, res) {
     }
     const company = await Company.findOne({ _id: updates.companyId, userId: req.user.userId }).lean();
     if (!company) return res.status(400).json({ error: { message: "Company not found" } });
+  }
+
+  if (updates.documentIds) {
+    updates.documentIds = await ensureDocumentsOwned({ userId: req.user.userId, documentIds: updates.documentIds });
   }
 
   const app = await Application.findOneAndUpdate(

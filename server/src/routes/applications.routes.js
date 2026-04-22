@@ -30,6 +30,9 @@ router.get(
         status: z.enum(ApplicationStatuses).optional(),
         companyId: z.string().optional(),
         q: z.string().optional(),
+        appliedFrom: z.string().optional(),
+        appliedTo: z.string().optional(),
+        sort: z.enum(["appliedDate_desc", "appliedDate_asc", "updatedAt_desc", "updatedAt_asc"]).optional(),
       }),
     }),
   ),
@@ -51,6 +54,7 @@ router.post(
         salaryRange: z.string().optional(),
         source: z.string().optional(),
         notes: z.string().optional(),
+        documentIds: z.array(z.string()).optional(),
       }),
       params: z.object({}).passthrough(),
       query: z.object({}).passthrough(),
@@ -86,6 +90,7 @@ router.patch(
           salaryRange: z.string().optional(),
           source: z.string().optional(),
           notes: z.string().optional(),
+          documentIds: z.array(z.string()).optional(),
         })
         .refine((v) => Object.keys(v).length > 0, { message: "No updates provided" }),
       params: z.object({ id: z.string() }),
@@ -171,4 +176,3 @@ router.delete(
 );
 
 module.exports = router;
-

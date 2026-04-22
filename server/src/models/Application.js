@@ -36,6 +36,7 @@ const ApplicationSchema = new mongoose.Schema(
     salaryRange: { type: String, default: "" },
     source: { type: String, default: "" },
     notes: { type: String, default: "" },
+    documentIds: { type: [mongoose.Schema.Types.ObjectId], ref: "Document", default: [] },
     interviewRounds: { type: [InterviewRoundSchema], default: [] },
   },
   { timestamps: true },
@@ -47,4 +48,3 @@ ApplicationSchema.index({ userId: 1, appliedDate: -1 });
 const Application = mongoose.model("Application", ApplicationSchema);
 
 module.exports = { Application, ApplicationStatuses };
-

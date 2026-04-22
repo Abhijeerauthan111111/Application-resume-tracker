@@ -13,6 +13,7 @@ export default function ApplicationDetailPage() {
   const [app, setApp] = useState(null);
   const [tasks, setTasks] = useState([]);
   const [companies, setCompanies] = useState([]);
+  const [documents, setDocuments] = useState([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
@@ -36,6 +37,8 @@ export default function ApplicationDetailPage() {
   });
   const [taskEditId, setTaskEditId] = useState(null);
   const [taskEditForm, setTaskEditForm] = useState({ title: "", dueAt: "" });
+  const [shareForm, setShareForm] = useState({ includeDocuments: false, expiresInDays: 30 });
+  const [shareUrl, setShareUrl] = useState("");
 
   const [roundForm, setRoundForm] = useState({
     roundType: "Technical",
@@ -53,14 +56,16 @@ export default function ApplicationDetailPage() {
     setLoading(true);
     setError("");
     try {
-      const [data, t, comps] = await Promise.all([
+      const [data, t, comps, docs] = await Promise.all([
         api.getApplication(id),
         api.listTasks({ applicationId: id, status: "open" }),
         api.listCompanies(),
+        api.listDocuments({}),
       ]);
       setApp(data);
       setTasks(t);
       setCompanies(comps);
+      setDocuments(docs);
       if (!editing) {
         setEditForm({
           companyId: data.companyId?._id || data.companyId || "",
@@ -643,6 +648,106 @@ export default function ApplicationDetailPage() {
               Create
             </button>
           </div>
+        </div>
+      </div>
+
+      <div className="grid2">
+        <div className="card">
+          <h3>Attached documents</h3>
+          <div className="muted small">Select documents to associate with this application.</div>
+          <div style={{ marginTop: 10 }}>
+            {documents.map((d) => {
+              const selected = (app.documentIds || []).includes(d._id);
+              return (
+                <label key={d._id} className="checkrow">
+                  <input
+                    type="checkbox"
+                    checked={selected}
+                    onChange={async () => {
+                      const next = selected
+                        ? (app.documentIds || []).filter((x) => x !== d._id)
+                        : [...(app.documentIds || []), d._id];
+                      setError("");
+                      try {
+                        const updated = await api.updateApplication(id, { documentIds: next });
+                        setApp(updated);
+                      } catch (e) {
+                        setError("Failed to update attached documents.");
+                      }
+                    }}
+                  />
+                  <span>
+                    <span className="title">{d.name}</span> <span className="muted small">({d.type})</span>
+                  </span>
+                </label>
+              );
+            })}
+            {documents.length === 0 ? <div className="muted">No documents yet. Add some in Documents.</div> : null}
+          </div>
+        </div>
+
+        <div className="card">
+          <h3>Share (read-only)</h3>
+          <div className="muted small">Generates a secret link for this application.</div>
+          <div className="row wrap" style={{ marginTop: 10 }}>
+            <label className="checkrow">
+              <input
+                type="checkbox"
+                checked={shareForm.includeDocuments}
+                onChange={(e) => setShareForm((f) => ({ ...f, includeDocuments: e.target.checked }))}
+              />
+              <span>Include documents</span>
+            </label>
+            <select
+              className="input"
+              value={shareForm.expiresInDays}
+              onChange={(e) => setShareForm((f) => ({ ...f, expiresInDays: Number(e.target.value) }))}
+            >
+              <option value={30}>Expires in 30 days</option>
+              <option value={7}>Expires in 7 days</option>
+              <option value={1}>Expires in 1 day</option>
+              <option value={0}>No expiry</option>
+            </select>
+            <button
+              className="btn btn-primary"
+              onClick={async () => {
+                setError("");
+                setShareUrl("");
+                try {
+                  const res = await api.createShare({
+                    applicationId: id,
+                    includeDocuments: shareForm.includeDocuments,
+                    expiresInDays: shareForm.expiresInDays,
+                  });
+                  setShareUrl(res.shareUrl);
+                } catch (e) {
+                  setError("Failed to create share link. Ensure SHARE_TOKEN_PEPPER and APP_BASE_URL are set on server.");
+                }
+              }}
+            >
+              Create link
+            </button>
+          </div>
+          {shareUrl ? (
+            <div style={{ marginTop: 10 }}>
+              <div className="muted small">Share URL</div>
+              <div className="row wrap">
+                <input className="input" style={{ flex: 1, minWidth: 260 }} value={shareUrl} readOnly />
+                <button
+                  className="btn"
+                  onClick={async () => {
+                    try {
+                      await navigator.clipboard.writeText(shareUrl);
+                    } catch (_e) {
+                      // ignore
+                    }
+                  }}
+                >
+                  Copy
+                </button>
+              </div>
+            </div>
+          ) : null}
         </div>
       </div>
     </div>

@@ -22,6 +22,12 @@ const env = {
   SENDGRID_API_KEY: process.env.SENDGRID_API_KEY || "",
   EMAIL_FROM: process.env.EMAIL_FROM || "",
   APP_BASE_URL: process.env.APP_BASE_URL || "http://localhost:5173",
+
+  CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME || "",
+  CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY || "",
+  CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET || "",
+
+  SHARE_TOKEN_PEPPER: process.env.SHARE_TOKEN_PEPPER || "",
 };
 
 module.exports = { env, requireEnv };

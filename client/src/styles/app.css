@@ -385,3 +385,37 @@ select.input option {
 .kv {
   min-width: 160px;
 }
+
+.checkrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 6px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  margin: 8px 0;
+}
+
+.checkrow input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+}
+
+.spark {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  padding: 10px 8px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  overflow-x: auto;
+}
+
+.spark-bar {
+  width: 8px;
+  background: rgba(79, 140, 255, 0.65);
+  border: 1px solid rgba(79, 140, 255, 0.25);
+  border-radius: 6px;
+}

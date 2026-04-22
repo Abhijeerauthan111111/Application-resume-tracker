@@ -28,6 +28,11 @@ const env = {
   CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET || "",
 
   SHARE_TOKEN_PEPPER: process.env.SHARE_TOKEN_PEPPER || "",
+
+  ENABLE_JOBS: process.env.ENABLE_JOBS === "true",
+  REMINDER_JOB_INTERVAL_MS: Number(process.env.REMINDER_JOB_INTERVAL_MS || 60_000),
+  DIGEST_JOB_INTERVAL_MS: Number(process.env.DIGEST_JOB_INTERVAL_MS || 300_000),
+  DIGEST_LOOKAHEAD_HOURS: Number(process.env.DIGEST_LOOKAHEAD_HOURS || 48),
 };
 
 module.exports = { env, requireEnv };

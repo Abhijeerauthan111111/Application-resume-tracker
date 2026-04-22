@@ -11,6 +11,7 @@ import CompaniesPage from "./pages/CompaniesPage";
 import DocumentsPage from "./pages/DocumentsPage";
 import SharePage from "./pages/SharePage";
 import SharesPage from "./pages/SharesPage";
+import SettingsPage from "./pages/SettingsPage";
 
 function Protected({ children }) {
   const { user, loading } = useAuth();
@@ -73,6 +74,14 @@ export default function App() {
           element={
             <Protected>
               <SharesPage />
+            </Protected>
+          }
+        />
+        <Route
+          path="/settings"
+          element={
+            <Protected>
+              <SettingsPage />
             </Protected>
           }
         />

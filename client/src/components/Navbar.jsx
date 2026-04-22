@@ -25,6 +25,9 @@ export default function Navbar() {
         <NavLink to="/shares" className={({ isActive }) => (isActive ? "active" : "")}>
           Shares
         </NavLink>
+        <NavLink to="/settings" className={({ isActive }) => (isActive ? "active" : "")}>
+          Settings
+        </NavLink>
         <NavLink to="/tasks" className={({ isActive }) => (isActive ? "active" : "")}>
           Tasks
         </NavLink>

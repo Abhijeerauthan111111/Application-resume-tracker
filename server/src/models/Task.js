@@ -22,15 +22,19 @@ const TaskSchema = new mongoose.Schema(
     completedAt: { type: Date },
     dismissedAt: { type: Date },
     emailLastSentAt: { type: Date },
+    emailLastRemindAt: { type: Date },
     emailSendCount: { type: Number, default: 0 },
+
+    // Used to dedupe/update automated tasks (follow-up, interview prep).
+    automationKey: { type: String, index: true },
   },
   { timestamps: true },
 );
 
 TaskSchema.index({ userId: 1, status: 1, dueAt: 1 });
 TaskSchema.index({ userId: 1, remindAt: 1 });
+TaskSchema.index({ userId: 1, automationKey: 1 }, { unique: true, sparse: true });
 
 const Task = mongoose.model("Task", TaskSchema);
 
 module.exports = { Task };
-

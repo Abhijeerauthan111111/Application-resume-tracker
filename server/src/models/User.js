@@ -12,6 +12,7 @@ const UserSchema = new mongoose.Schema(
       dailyDigestEnabled: { type: Boolean, default: true },
       dailyDigestTime: { type: String, default: "09:00" },
       followUpDefaultDays: { type: Number, default: 4 },
+      dailyDigestLastSentAt: { type: Date },
     },
   },
   { timestamps: true },
@@ -20,4 +21,3 @@ const UserSchema = new mongoose.Schema(
 const User = mongoose.model("User", UserSchema);
 
 module.exports = { User };
-

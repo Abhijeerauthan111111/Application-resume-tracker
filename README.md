@@ -12,6 +12,12 @@
 - Read-only sharing: generate a secret link per application (token-based)
 - Analytics summary (counts by status)
 
+## Phase 3 add-ons in this repo
+- Reminder automation:
+  - Follow-up task auto-created when an application becomes `Applied`
+  - Interview prep task auto-created from interview round `scheduledAt`
+- Email reminders + daily digest (SendGrid) via server jobs (opt-in with `ENABLE_JOBS=true`)
+
 ## Prereqs
 - Node.js 18+
 - MongoDB (local or Atlas)
@@ -29,6 +35,9 @@
     - `SHARE_TOKEN_PEPPER` (any long random string)
     - For uploads: `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`
     - `APP_BASE_URL` (where the frontend runs; used to build share links)
+  - Phase 3:
+    - `SENDGRID_API_KEY` + `EMAIL_FROM`
+    - `ENABLE_JOBS=true` (jobs send emails in the background)
 - Install + run:
   - `npm install`
   - `npm run dev`

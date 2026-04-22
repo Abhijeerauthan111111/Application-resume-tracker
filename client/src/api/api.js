@@ -19,6 +19,11 @@ export function createApi(getIdToken) {
       return res.data.data;
     },
 
+    async updateSettings(payload) {
+      const res = await client.patch("/users/settings", payload);
+      return res.data.data;
+    },
+
     async listCompanies() {
       const res = await client.get("/companies");
       return res.data.data;

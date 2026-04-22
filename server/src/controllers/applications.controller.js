@@ -3,6 +3,8 @@ const { Application, ApplicationStatuses } = require("../models/Application");
 const { Company } = require("../models/Company");
 const { Task } = require("../models/Task");
 const { Document } = require("../models/Document");
+const { User } = require("../models/User");
+const { upsertFollowUpTask, upsertInterviewPrepTask, deleteInterviewPrepTask } = require("../services/automation");
 
 function asDate(value) {
   const d = new Date(value);
@@ -117,6 +119,20 @@ async function createApplication(req, res) {
   });
 
   const populated = await Application.findById(app._id).populate("companyId", "name website").lean();
+
+  if (body.status === "Applied") {
+    const user = await User.findById(req.user.userId).lean();
+    const followUpDays = user?.settings?.followUpDefaultDays ?? 4;
+    const title = `Follow up: ${populated.role} @ ${populated.companyId?.name || "Company"}`;
+    await upsertFollowUpTask({
+      userId: req.user.userId,
+      applicationId: app._id,
+      title,
+      appliedDate,
+      followUpDays,
+    });
+  }
+
   res.status(201).json({ data: populated });
 }
 
@@ -168,6 +184,21 @@ async function updateApplication(req, res) {
     .lean();
 
   if (!app) return res.status(404).json({ error: { message: "Application not found" } });
+
+  // Automation: ensure follow-up exists when status is Applied.
+  if (app.status === "Applied") {
+    const user = await User.findById(req.user.userId).lean();
+    const followUpDays = user?.settings?.followUpDefaultDays ?? 4;
+    const title = `Follow up: ${app.role} @ ${app.companyId?.name || "Company"}`;
+    await upsertFollowUpTask({
+      userId: req.user.userId,
+      applicationId: app._id,
+      title,
+      appliedDate: new Date(app.appliedDate),
+      followUpDays,
+    });
+  }
+
   res.json({ data: app });
 }
 
@@ -186,6 +217,20 @@ async function setStatus(req, res) {
     .lean();
 
   if (!app) return res.status(404).json({ error: { message: "Application not found" } });
+
+  if (status === "Applied") {
+    const user = await User.findById(req.user.userId).lean();
+    const followUpDays = user?.settings?.followUpDefaultDays ?? 4;
+    const title = `Follow up: ${app.role} @ ${app.companyId?.name || "Company"}`;
+    await upsertFollowUpTask({
+      userId: req.user.userId,
+      applicationId: app._id,
+      title,
+      appliedDate: new Date(app.appliedDate),
+      followUpDays,
+    });
+  }
+
   res.json({ data: app });
 }
 
@@ -227,6 +272,20 @@ async function addRound(req, res) {
     .lean();
 
   if (!app) return res.status(404).json({ error: { message: "Application not found" } });
+
+  // Automation: create interview prep task (if scheduledAt provided).
+  const createdRound = app.interviewRounds?.[app.interviewRounds.length - 1];
+  if (createdRound?.scheduledAt) {
+    const title = `Interview prep: ${createdRound.roundType} - ${app.role} @ ${app.companyId?.name || "Company"}`;
+    await upsertInterviewPrepTask({
+      userId: req.user.userId,
+      applicationId: app._id,
+      roundId: createdRound._id,
+      title,
+      scheduledAt: new Date(createdRound.scheduledAt),
+    });
+  }
+
   res.json({ data: app });
 }
 
@@ -255,6 +314,23 @@ async function updateRound(req, res) {
     .lean();
 
   if (!app) return res.status(404).json({ error: { message: "Round not found" } });
+
+  const round = (app.interviewRounds || []).find((r) => String(r._id) === String(roundId));
+  if (round) {
+    if (round.scheduledAt) {
+      const title = `Interview prep: ${round.roundType} - ${app.role} @ ${app.companyId?.name || "Company"}`;
+      await upsertInterviewPrepTask({
+        userId: req.user.userId,
+        applicationId: app._id,
+        roundId: round._id,
+        title,
+        scheduledAt: new Date(round.scheduledAt),
+      });
+    } else {
+      await deleteInterviewPrepTask({ userId: req.user.userId, applicationId: app._id, roundId });
+    }
+  }
+
   res.json({ data: app });
 }
 
@@ -273,6 +349,9 @@ async function deleteRound(req, res) {
     .lean();
 
   if (!app) return res.status(404).json({ error: { message: "Application not found" } });
+
+  await deleteInterviewPrepTask({ userId: req.user.userId, applicationId: id, roundId });
+
   res.json({ data: app });
 }
 

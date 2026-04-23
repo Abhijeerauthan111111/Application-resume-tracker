@@ -10,9 +10,5 @@
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/$1" },
     { "source": "/(.*)", "destination": "/index.html" }
-  ],
-  "crons": [
-    { "path": "/api/jobs/reminders/dispatch", "schedule": "* * * * *" },
-    { "path": "/api/jobs/digest/run", "schedule": "*/5 * * * *" }
   ]
 }

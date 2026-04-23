@@ -16,7 +16,7 @@
 - Reminder automation:
   - Follow-up task auto-created when an application becomes `Applied`
   - Interview prep task auto-created from interview round `scheduledAt`
-- Email reminders + daily digest (SendGrid) via server jobs (opt-in with `ENABLE_JOBS=true`)
+- Email reminders + daily digest (SendGrid) via server jobs
 
 ## Prereqs
 - Node.js 18+
@@ -37,7 +37,7 @@
     - `APP_BASE_URL` (where the frontend runs; used to build share links)
   - Phase 3:
     - `SENDGRID_API_KEY` + `EMAIL_FROM`
-    - `ENABLE_JOBS=true` (jobs send emails in the background)
+    - `ENABLE_JOBS=true` (local-only; for Vercel use external cron)
 - Install + run:
   - `npm install`
   - `npm run dev`
@@ -63,3 +63,13 @@ Note: after editing `client/.env`, restart the Vite dev server.
 ## Local URLs
 - Client: `http://localhost:5173`
 - Server: `http://localhost:4000`
+
+## Vercel Hobby + Cron (recommended)
+Vercel Hobby limits cron frequency. For frequent jobs (every minute / every 5 minutes):
+1. Deploy the app to Vercel (single project).
+2. Set a long random `JOBS_SECRET` in Vercel env vars.
+3. Use Cloudflare Workers Cron Triggers to call:
+   - `GET https://<vercel-domain>/api/jobs/reminders/dispatch` with header `x-jobs-secret: <JOBS_SECRET>`
+   - `GET https://<vercel-domain>/api/jobs/digest/run` with header `x-jobs-secret: <JOBS_SECRET>`
+
+Worker scaffold is in `application-tracker/cloudflare-worker`.

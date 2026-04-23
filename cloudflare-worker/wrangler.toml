@@ -1,0 +1,15 @@
+name = "application-tracker-cron"
+main = "src/index.js"
+compatibility_date = "2026-04-23"
+
+# Configure schedules in Cloudflare Dashboard or by uncommenting one of these.
+# Cloudflare cron granularity may vary by plan; use 5 minutes if 1 minute isn't allowed.
+#
+# [triggers]
+# crons = ["*/1 * * * *", "*/5 * * * *"]
+
+[vars]
+# Set these in Cloudflare as secrets instead of here:
+# - API_BASE_URL (e.g. https://yourapp.vercel.app)
+# - JOBS_SECRET (must match Vercel env var JOBS_SECRET)
+

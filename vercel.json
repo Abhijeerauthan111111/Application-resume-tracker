@@ -8,9 +8,9 @@
       "config": { "maxDuration": 30 }
     },
     {
-      "src": "client/package.json",
+      "src": "package.json",
       "use": "@vercel/static-build",
-      "config": { "distDir": "dist" }
+      "config": { "distDir": "client/dist" }
     }
   ],
   "routes": [
